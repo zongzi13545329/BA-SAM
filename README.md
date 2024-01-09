@@ -69,7 +69,12 @@ Welcome to open issues if you meet any problem. It would be appreciated if you c
 ## Cite
 If you use BA-SAM in your research, please use the following BibTeX entry. 
 ~~~
-
+@article{song2024ba,
+  title={BA-SAM: Scalable Bias-Mode Attention Mask for Segment Anything Model},
+  author={Song, Yiran and Zhou, Qianyu and Li, Xiangtai and Fan, Deng-Ping and Lu, Xuequan and Ma, Lizhuang},
+  journal={arXiv preprint arXiv:2401.02317},
+  year={2024}
+}
 ~~~
 ~~~
 @article{kirillov2023segany,
