@@ -1,6 +1,6 @@
 # BA-SAM: Scalable Bias-Mode Attention Mask for Segment Anything Model
 
-The official code for BA-SAM. This method is elaborated in the paper xxx.
+The official code for BA-SAM. This method is elaborated in the paper [BA-SAM](https://arxiv.org/abs/2401.02317).
 
 
 ## Requirement
