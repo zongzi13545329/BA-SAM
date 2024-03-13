@@ -218,9 +218,9 @@ class Attention(torch.nn.Module):
         # (h, w)
         assert isinstance(resolution, tuple) and len(resolution) == 2
         self.num_heads = num_heads
-        #self.scale = key_dim ** -0.5* 1.33
-        self.scale = key_dim ** -0.5
+        # self.scale = key_dim ** -0.5*1.33
         # self.scale = key_dim ** -0.5
+        self.scale = key_dim ** -0.5
         self.key_dim = key_dim
         self.nh_kd = nh_kd = key_dim * num_heads
         self.d = int(attn_ratio * key_dim)
@@ -248,6 +248,7 @@ class Attention(torch.nn.Module):
         self.register_buffer('attention_bias_idxs',
                              torch.LongTensor(idxs).view(N, N),
                              persistent=False)
+        self.coefficient = nn.Parameter(torch.tensor([0.1])) 
 
     @torch.no_grad()
     def train(self, mode=True):
@@ -277,7 +278,7 @@ class Attention(torch.nn.Module):
         attn = (
             (q @ k.transpose(-2, -1)) * self.scale
             +
-            (self.attention_biases[:, self.attention_bias_idxs]
+            (self.coefficient*self.attention_biases[:, self.attention_bias_idxs]
              if self.training else self.ab) * 1.5
         )
         attn = attn.softmax(dim=-1)
@@ -611,9 +612,16 @@ class TinyViT(nn.Module):
             layer = self.layers[i]
             x = layer(x)
         B,_,C=x.size()
-        x = x.view(B, 64, 64, C)
-        # x = x.view(B, 128, 128, C) 
-        # x = x.view(B, 256, 256, C) 
+        if self.img_size == 512:
+            x = x.view(B, 32, 32, C)
+        elif self.img_size == 1024:
+            x = x.view(B, 64, 64, C)
+        elif self.img_size == 2048:
+            x = x.view(B, 128, 128, C)
+        elif self.img_size == 4096: 
+            x = x.view(B, 256, 256, C)
+        else:
+            print ("Wrong Resolution!") 
         x=x.permute(0, 3, 1, 2)
         x=self.neck(x)
         return x
