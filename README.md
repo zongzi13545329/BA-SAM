@@ -59,7 +59,7 @@ It is simple to run BA-SAM on the other datasets. Just write another dataset cla
 Welcome to open issues if you meet any problem. It would be appreciated if you could contribute your dataset extensions. Unlike natural images, medical images vary a lot depending on different tasks. Expanding the generalization of a method requires everyone's efforts. Our code is build upon [MSA](https://github.com/KidsWithTokens/Medical-SAM-Adapter)
 ### TODO LIST
 
-- [ } Release base code and ckpt.
+- [ ] Release base code and ckpt.
 - [ ] Fix bugs
 - [ ] More details
 
