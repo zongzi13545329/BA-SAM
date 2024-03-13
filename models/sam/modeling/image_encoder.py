@@ -214,6 +214,8 @@ class Attention(nn.Module):
         self.num_heads = num_heads
         head_dim = dim // num_heads
         self.scale = head_dim**-0.5
+        # You can adjust the sacle by yourself
+        #self.scale = key_dim ** -0.5* 1.33
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.proj = nn.Linear(dim, dim)
@@ -223,7 +225,8 @@ class Attention(nn.Module):
             assert (
                 input_size is not None
             ), "Input size must be provided if using relative positional encoding."
-            # initialize relative positional embeddings
+            # 增加系数，作为我们提出的bias
+            self.coefficient = nn.Parameter(torch.tensor([0.1])) 
             self.rel_pos_h = nn.Parameter(torch.zeros(2 * input_size[0] - 1, head_dim))
             self.rel_pos_w = nn.Parameter(torch.zeros(2 * input_size[1] - 1, head_dim))
 
@@ -237,7 +240,7 @@ class Attention(nn.Module):
         attn = (q * self.scale) @ k.transpose(-2, -1)
 
         if self.use_rel_pos:
-            attn = add_decomposed_rel_pos(attn, q, self.rel_pos_h, self.rel_pos_w, (H, W), (H, W))
+            attn = add_decomposed_rel_pos(attn, q, self.rel_pos_h, self.rel_pos_w, (H, W), (H, W), self.coefficient)
 
         attn = attn.softmax(dim=-1)
         x = (attn @ v).view(B, self.num_heads, H, W, -1).permute(0, 2, 3, 1, 4).reshape(B, H, W, -1)
@@ -295,7 +298,7 @@ def window_unpartition(
     return x
 
 
-def get_rel_pos(q_size: int, k_size: int, rel_pos: torch.Tensor) -> torch.Tensor:
+def get_rel_pos(q_size: int, k_size: int, rel_pos: torch.Tensor, coefficient: torch.Tensor) -> torch.Tensor:
     """
     Get relative positional embeddings according to the relative positions of
         query and key sizes.
@@ -325,7 +328,7 @@ def get_rel_pos(q_size: int, k_size: int, rel_pos: torch.Tensor) -> torch.Tensor
     k_coords = torch.arange(k_size)[None, :] * max(q_size / k_size, 1.0)
     relative_coords = (q_coords - k_coords) + (k_size - 1) * max(q_size / k_size, 1.0)
 
-    return rel_pos_resized[relative_coords.long()]
+    return coefficient* rel_pos_resized[relative_coords.long()]
 
 
 def add_decomposed_rel_pos(
@@ -335,6 +338,7 @@ def add_decomposed_rel_pos(
     rel_pos_w: torch.Tensor,
     q_size: Tuple[int, int],
     k_size: Tuple[int, int],
+    coefficient: torch.Tensor,
 ) -> torch.Tensor:
     """
     Calculate decomposed Relative Positional Embeddings from :paper:`mvitv2`.
@@ -352,8 +356,8 @@ def add_decomposed_rel_pos(
     """
     q_h, q_w = q_size
     k_h, k_w = k_size
-    Rh = get_rel_pos(q_h, k_h, rel_pos_h)
-    Rw = get_rel_pos(q_w, k_w, rel_pos_w)
+    Rh = get_rel_pos(q_h, k_h, rel_pos_h, coefficient)
+    Rw = get_rel_pos(q_w, k_w, rel_pos_w, coefficient)
 
     B, _, dim = q.shape
     r_q = q.reshape(B, q_h, q_w, dim)
