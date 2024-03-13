@@ -29,11 +29,9 @@ ISIC/
 2. Begin Adapting! run: ``python train.py -net sam -mod sam_adpt -exp_name *msa_test_isic* -sam_ckpt ./checkpoint/sam/sam_vit_b_01ec64.pth -image_size 1024 -b 32 -dataset isic --data_path *../data*``
 change "data_path" and "exp_name" for your own useage. 
 
-3. Evaluation: The code can automatically evaluate the model on the test set during traing, set "--val_freq" to control how many epoches you want to evaluate once. You can also run val.py for the independent evaluation.  
+3. Evaluation: The code can automatically evaluate the model on the test set during traing, set "--val_freq" to control how many epoches you want to evaluate once. You can also run val.py for the independent evaluation.  (The ckpt will be released soon.)
 
-For evaluation without train, you can directly download the model weights from the [checkpoints](https://drive.google.com/drive/folders/1Y6IBfUXt6_WwX0rM31v6XDJTV5baFw_t?usp=drive_link) trained on the the datasets mentioned in our paper for 50 epoch.
-
-5. Result Visualization: You can set "--vis" parameter to control how many epoches you want to see the results in the training or evaluation process.
+4. Result Visualization: You can set "--vis" parameter to control how many epoches you want to see the results in the training or evaluation process.
 
 In default, everything will be saved at `` ./logs/`` 
 
@@ -58,11 +56,10 @@ It is simple to run BA-SAM on the other datasets. Just write another dataset cla
      }
 
 
-Welcome to open issues if you meet any problem. It would be appreciated if you could contribute your dataset extensions. Unlike natural images, medical images vary a lot depending on different tasks. Expanding the generalization of a method requires everyone's efforts.
-
+Welcome to open issues if you meet any problem. It would be appreciated if you could contribute your dataset extensions. Unlike natural images, medical images vary a lot depending on different tasks. Expanding the generalization of a method requires everyone's efforts. Our code is build upon [MSA](https://github.com/KidsWithTokens/Medical-SAM-Adapter)
 ### TODO LIST
 
-- [x] Release base code and ckpt.
+- [ } Release base code and ckpt.
 - [ ] Fix bugs
 - [ ] More details
 
