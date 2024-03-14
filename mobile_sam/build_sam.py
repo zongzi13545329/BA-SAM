@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
-
+import torch.nn as nn
 from functools import partial
 
 from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer, TinyViT
@@ -13,6 +13,7 @@ from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTr
 
 def build_sam_vit_h(checkpoint=None):
     return _build_sam(
+        args,
         encoder_embed_dim=1280,
         encoder_depth=32,
         encoder_num_heads=16,
@@ -26,6 +27,7 @@ build_sam = build_sam_vit_h
 
 def build_sam_vit_l(checkpoint=None):
     return _build_sam(
+        args,
         encoder_embed_dim=1024,
         encoder_depth=24,
         encoder_num_heads=16,
@@ -34,8 +36,9 @@ def build_sam_vit_l(checkpoint=None):
     )
 
 
-def build_sam_vit_b(checkpoint=None):
+def build_sam_vit_b(args,checkpoint=None):
     return _build_sam(
+        args,
         encoder_embed_dim=768,
         encoder_depth=12,
         encoder_num_heads=12,
@@ -44,13 +47,13 @@ def build_sam_vit_b(checkpoint=None):
     )
 
 
-def build_sam_vit_t(checkpoint=None):
+def build_sam_vit_t(args,checkpoint=None):
     prompt_embed_dim = 256
-    image_size = 1024 #2048
+    image_size = args.image_size #2048
     vit_patch_size = 16
     image_embedding_size = image_size // vit_patch_size
     mobile_sam = Sam(
-            image_encoder=TinyViT(img_size=1024, in_chans=3, num_classes=1000,
+            image_encoder=TinyViT(img_size=args.image_size, in_chans=3, num_classes=1000,
                 embed_dims=[64, 128, 160, 320],
                 depths=[2, 2, 6, 2],
                 num_heads=[2, 4, 5, 10],
@@ -89,7 +92,7 @@ def build_sam_vit_t(checkpoint=None):
     if checkpoint is not None:
         with open(checkpoint, "rb") as f:
             state_dict = torch.load(f)
-        mobile_sam.load_state_dict(state_dict)
+        mobile_sam.load_state_dict(state_dict,strict = False)
     return mobile_sam
 
 
@@ -103,6 +106,7 @@ sam_model_registry = {
 
 
 def _build_sam(
+    args,
     encoder_embed_dim,
     encoder_depth,
     encoder_num_heads,
@@ -110,7 +114,7 @@ def _build_sam(
     checkpoint=None,
 ):
     prompt_embed_dim = 256
-    image_size = 1024
+    image_size = args.image_size
     vit_patch_size = 16
     image_embedding_size = image_size // vit_patch_size
     sam = Sam(

@@ -16,6 +16,7 @@ from timm.models.layers import DropPath as TimmDropPath,\
     to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 from typing import Tuple
+import math
 
 
 class Conv2d_BN(torch.nn.Sequential):
@@ -148,7 +149,7 @@ class PatchMerging(nn.Module):
 
 
 class ConvLayer(nn.Module):
-    def __init__(self, dim, input_resolution, depth,
+    def __init__(self, dim, input_resolution, depth, img_size,
                  activation,
                  drop_path=0., downsample=None, use_checkpoint=False,
                  out_dim=None,
@@ -210,17 +211,18 @@ class Mlp(nn.Module):
 
 
 class Attention(torch.nn.Module):
-    def __init__(self, dim, key_dim, num_heads=8,
+    def __init__(self, dim, key_dim, num_heads=8,img_size=1024,
                  attn_ratio=4,
                  resolution=(14, 14),
                  ):
         super().__init__()
         # (h, w)
         assert isinstance(resolution, tuple) and len(resolution) == 2
-        self.num_heads = num_heads
+        self.img_size = img_size 
+        self.num_heads = num_heads 
         # self.scale = key_dim ** -0.5*1.33
         # self.scale = key_dim ** -0.5
-        self.scale = key_dim ** -0.5
+        self.scale = key_dim ** -0.5 * math.log(self.img_size, 1024) # new factor
         self.key_dim = key_dim
         self.nh_kd = nh_kd = key_dim * num_heads
         self.d = int(attn_ratio * key_dim)
@@ -248,7 +250,7 @@ class Attention(torch.nn.Module):
         self.register_buffer('attention_bias_idxs',
                              torch.LongTensor(idxs).view(N, N),
                              persistent=False)
-        self.coefficient = nn.Parameter(torch.tensor([0.1])) 
+        self.coefficient = nn.Parameter(torch.tensor([0.5])) 
 
     @torch.no_grad()
     def train(self, mode=True):
@@ -303,7 +305,7 @@ class TinyViTBlock(nn.Module):
         activation: the activation function. Default: nn.GELU
     """
 
-    def __init__(self, dim, input_resolution, num_heads, window_size=7,
+    def __init__(self, dim, input_resolution, num_heads, img_size, window_size=7,
                  mlp_ratio=4., drop=0., drop_path=0.,
                  local_conv_size=3,
                  activation=nn.GELU,
@@ -323,7 +325,7 @@ class TinyViTBlock(nn.Module):
         head_dim = dim // num_heads
 
         window_resolution = (window_size, window_size)
-        self.attn = Attention(dim, head_dim, num_heads,
+        self.attn = Attention(dim, head_dim, num_heads,img_size,
                               attn_ratio=1, resolution=window_resolution)
 
         mlp_hidden_dim = int(dim * mlp_ratio)
@@ -403,7 +405,7 @@ class BasicLayer(nn.Module):
         out_dim: the output dimension of the layer. Default: dim
     """
 
-    def __init__(self, dim, input_resolution, depth, num_heads, window_size,
+    def __init__(self, dim, input_resolution, depth, num_heads, window_size, img_size,
                  mlp_ratio=4., drop=0.,
                  drop_path=0., downsample=None, use_checkpoint=False,
                  local_conv_size=3,
@@ -416,7 +418,6 @@ class BasicLayer(nn.Module):
         self.input_resolution = input_resolution
         self.depth = depth
         self.use_checkpoint = use_checkpoint
-
         # build blocks
         self.blocks = nn.ModuleList([
             TinyViTBlock(dim=dim, input_resolution=input_resolution,
@@ -427,6 +428,7 @@ class BasicLayer(nn.Module):
                              drop_path, list) else drop_path,
                          local_conv_size=local_conv_size,
                          activation=activation,
+                         img_size = img_size,
                          )
             for i in range(depth)])
 
@@ -513,6 +515,7 @@ class TinyViT(nn.Module):
                           out_dim=embed_dims[min(
                               i_layer + 1, len(embed_dims) - 1)],
                           activation=activation,
+                          img_size=img_size
                           )
             if i_layer == 0:
                 layer = ConvLayer(
