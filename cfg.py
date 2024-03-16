@@ -5,7 +5,7 @@ def parse_args():
     parser.add_argument('-net', type=str, required=True, help='net type')
     parser.add_argument('-baseline', type=str, default='unet', help='baseline net type')
     parser.add_argument('-seg_net', type=str, default='transunet', help='net type')
-    parser.add_argument('-mod', type=str, required=True, help='mod type:seg,cls,val_ad')
+    parser.add_argument('-mod', type=str, default='sam_adpt',help='sam_adpt')
     parser.add_argument('-exp_name', type=str, required=True, help='net type')
     parser.add_argument('-type', type=str, default='map', help='condition type:ave,rand,rand_map')
     parser.add_argument('-vis', type=int, default=1000, help='visualization')

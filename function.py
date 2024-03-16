@@ -47,7 +47,7 @@ from monai.transforms import (
 )
 
 
-import torch
+from skimage.transform import resize
 
 
 args = cfg.parse_args()
@@ -128,6 +128,9 @@ def train_sam(args, net: nn.Module, optimizer, train_loader,
             imgs = imgs.to(dtype = mask_type,device = GPUdevice)
             
             '''Train'''
+            # for n, value in net.image_encoder.named_parameters():
+            #     if "linear" not in n :
+            #         value.requires_grad = False
             imge= net.image_encoder(imgs)
 
             with torch.no_grad():
@@ -211,12 +214,13 @@ def validation_sam(args, val_loader, epoch, net: nn.Module, clean_dir=True):
                 evl_ch = int(args.evl_chunk)
             else:
                 evl_ch = int(imgsw.size(-1))
+                eval_ch_mask = int(masksw.size(-1))
 
             while (buoy + evl_ch) <= imgsw.size(-1):
                 pt = ptw
 
                 imgs = imgsw[...,buoy:buoy + evl_ch]
-                masks = masksw[...,buoy:buoy + evl_ch]
+                masks = masksw[...,buoy:buoy + eval_ch_mask]
                 buoy += evl_ch
 
                 
@@ -258,6 +262,12 @@ def validation_sam(args, val_loader, epoch, net: nn.Module, clean_dir=True):
                         dense_prompt_embeddings=de, 
                         multimask_output=False,
                     )
+
+
+                    if pred.shape != masks.shape:
+                        # 使用skimage.transform.resize进行插值
+                        pred = resize(pred.cpu(), masks.shape, order=3,anti_aliasing=True)
+                    pred = torch.as_tensor(pred, dtype=torch.float, device=GPUdevice)
                 
                     tot += lossfunc(pred, masks)
 

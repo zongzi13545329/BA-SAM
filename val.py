@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import roc_auc_score, accuracy_score,confusion_matrix
 import torchvision
-import torchvision.transforms as transforms
+from torchvision import transforms
 from skimage import io
 from torch.utils.data import DataLoader
 #from dataset import *
@@ -51,7 +51,7 @@ assert os.path.exists(checkpoint_file)
 loc = 'cuda:{}'.format(args.gpu_device)
 checkpoint = torch.load(checkpoint_file, map_location=loc)
 start_epoch = checkpoint['epoch']
-best_tol = checkpoint['best_tol']
+best_mae = checkpoint['best_mae']
 
 state_dict = checkpoint['state_dict']
 if args.distributed != 'none':
@@ -65,7 +65,13 @@ if args.distributed != 'none':
 else:
     new_state_dict = state_dict
 
-net.load_state_dict(new_state_dict)
+n_state_dict = OrderedDict()
+for k, v in new_state_dict.items():
+        # name = k[7:] # remove `module.`
+    if 'rel_pos' not in k:
+        n_state_dict[k] = v
+
+net.load_state_dict(n_state_dict, strict = False)
 
 # args.path_helper = checkpoint['path_helper']
 # logger = create_logger(args.path_helper['log_path'])
@@ -174,20 +180,14 @@ elif args.dataset == 'CHAMELEON':
     nice_test_loader = DataLoader(chameleon_test_dataset, batch_size=args.b, shuffle=False, num_workers=8, pin_memory=True)
 
 '''begain valuation'''
-best_acc = 0.0
-best_tol = 1e4
 start_epoch = 0
 
 if args.mod == 'sam_adpt':
     net.eval()
-    #打印参数量\
-    params = 0
-    for n, value in net.parameters():
-        if "decoder" not in n :
-            params += n.numel()
+    #打印参数量
     total_params = sum(p.numel() for p in net.parameters())
     print('#######################参数量为：')
-    print(f'{total_params:,} total parameters.', params)
+    print(f'{total_params:,} total parameters.')
 
     tol, (eiou, edice, emae) = function.validation_sam(args, nice_test_loader, start_epoch, net)
     logger.info(f'Total score: {tol}, IOU: {eiou}, DICE: {edice} ,MAE: {emae} || @ epoch {start_epoch}.')

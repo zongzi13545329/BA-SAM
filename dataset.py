@@ -57,7 +57,7 @@ class ISIC2016(Dataset):
         msk_path = os.path.join(self.data_path, mask_name)
 
         img = Image.open(img_path).convert('RGB')
-        mask = Image.open(msk_path).convert('L')
+        gt = Image.open(msk_path).convert('L')
 
         # if self.mode == 'Training':
         #     label = 0 if self.label_list[index] == 'benign' else 1
@@ -65,7 +65,7 @@ class ISIC2016(Dataset):
         #     label = int(self.label_list[index])
 
         newsize = (self.img_size, self.img_size)
-        mask = mask.resize(newsize)
+        mask = gt.resize(newsize)
 
         if self.prompt == 'click':
             pt = random_click(np.array(mask) / 255, point_label, inout)
@@ -77,7 +77,7 @@ class ISIC2016(Dataset):
 
 
             if self.transform_msk:
-                mask = self.transform_msk(mask)
+                mask = self.transform_msk(gt)
                 
             # if (inout == 0 and point_label == 1) or (inout == 1 and point_label == 0):
             #     mask = 1 - mask
@@ -139,7 +139,7 @@ class CamObjDataset(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}
@@ -252,7 +252,7 @@ class SUB(Dataset):
 
 
             if self.transform_msk:
-                mask = self.transform_msk(mask)
+                mask = self.transform_msk(gt)
                 
             # if (inout == 0 and point_label == 1) or (inout == 1 and point_label == 0):
             #     mask = 1 - mask
@@ -283,8 +283,8 @@ class DIS(Dataset):
             image_root = os.path.join(self.data_path + '/DIS-VD/im/')
             gt_root = os.path.join(self.data_path + '/DIS-VD/gt/')       
         else :
-            image_root = os.path.join(self.data_path + '/DIS-TE4/im/')
-            gt_root = os.path.join(self.data_path + '/DIS-TE4/gt/')           
+            image_root = os.path.join(self.data_path + '/DIS-TE3/im/')
+            gt_root = os.path.join(self.data_path + '/DIS-TE3/gt/')           
         self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg')]
         self.gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.jpg')
                     or f.endswith('.png')]
@@ -319,7 +319,7 @@ class DIS(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}
@@ -417,7 +417,7 @@ class DUTS(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}
@@ -517,7 +517,7 @@ class CDS2K(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}
@@ -613,7 +613,7 @@ class CAMO(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}
@@ -709,7 +709,7 @@ class CHAMELEON(Dataset):
             torch.set_rng_state(state)
 
         if self.transform_msk:
-            mask = self.transform_msk(mask)
+            mask = self.transform_msk(gt)
         
         name=self.images[index].split('/')[-1].split(".jpg")[0]
         image_meta_dict = {'filename_or_obj':name}

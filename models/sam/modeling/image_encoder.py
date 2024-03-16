@@ -86,7 +86,7 @@ class ImageEncoderViT(nn.Module):
                 rel_pos_zero_init=rel_pos_zero_init,
                 window_size=window_size if i not in global_attn_indexes else 0,
                 input_size=(img_size // patch_size, img_size // patch_size),
-                img_size = img_size,
+                length_scale = img_size // 1024,
             )
             self.blocks.append(block)
 
@@ -138,7 +138,7 @@ class Block(nn.Module):
         rel_pos_zero_init: bool = True,
         window_size: int = 0,
         input_size: Optional[Tuple[int, int]] = None,
-        img_size: int = 1024,
+        length_scale: int = 1,
     ) -> None:
         """
         Args:
@@ -165,7 +165,8 @@ class Block(nn.Module):
             use_rel_pos=use_rel_pos,
             rel_pos_zero_init=rel_pos_zero_init,
             input_size=input_size if window_size == 0 else (window_size, window_size),
-            img_size = img_size
+            length_scale = length_scale,
+            if_global = True if window_size == 0 else False,
         )
 
         self.norm2 = norm_layer(dim)
@@ -203,7 +204,8 @@ class Attention(nn.Module):
         use_rel_pos: bool = False,
         rel_pos_zero_init: bool = True,
         input_size: Optional[Tuple[int, int]] = None,
-        img_size: int = 1024,
+        length_scale: int = 1,
+        if_global : bool = False
     ) -> None:
         """
         Args:
@@ -218,7 +220,10 @@ class Attention(nn.Module):
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = head_dim**-0.5* math.log(img_size, 1024)
+        if if_global:
+            self.scale = head_dim**-0.5* math.log(length_scale**2*4096, 4096)
+        else:
+            self.scale = head_dim**-0.5
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.proj = nn.Linear(dim, dim)

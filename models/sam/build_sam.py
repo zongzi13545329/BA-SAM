@@ -85,6 +85,7 @@ def _build_sam(
             num_heads=encoder_num_heads,
             patch_size=vit_patch_size,
             qkv_bias=True,
+            use_abs_pos = False,
             use_rel_pos=True,
             global_attn_indexes=encoder_global_attn_indexes,
             window_size=14,
@@ -148,5 +149,11 @@ def _build_sam(
     if checkpoint is not None:
         with open(checkpoint, "rb") as f:
             state_dict = torch.load(f)
-        sam.load_state_dict(state_dict, strict = False)
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        # name = k[7:] # remove `module.`
+        if 'rel_pos' not in k:
+            new_state_dict[k] = v
+    sam.load_state_dict(new_state_dict, strict = False)
     return sam
