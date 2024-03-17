@@ -29,7 +29,7 @@ ISIC/
 2. Begin Adapting! run: ``python train.py -net sam -mod sam_adpt -exp_name *msa_test_isic* -sam_ckpt ./checkpoint/sam/sam_vit_b_01ec64.pth -image_size 1024 -b 32 -dataset isic --data_path *../data*``
 change "data_path" and "exp_name" for your own useage. 
 
-3. Evaluation: The code can automatically evaluate the model on the test set during traing, set "--val_freq" to control how many epoches you want to evaluate once. You can also run val.py for the independent evaluation.  (The ckpt will be released soon.)
+3. Evaluation: The code can automatically evaluate the model on the test set during traing, set "--val_freq" to control how many epoches you want to evaluate once. You can also run val.py for the independent evaluation.  We provide several ckpt here: [ckpt](https://drive.google.com/drive/folders/1Y6IBfUXt6_WwX0rM31v6XDJTV5baFw_t?usp=drive_link)
 
 4. Result Visualization: You can set "--vis" parameter to control how many epoches you want to see the results in the training or evaluation process.
 
